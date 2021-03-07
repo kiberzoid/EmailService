@@ -17,10 +17,10 @@ public class ExceptionInfoHandler {
     public static final Logger LOG = LoggerFactory.getLogger(ExceptionInfoHandler.class);
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
-    public ResponseEntity<Map<String, String>> handleValidationExceptions(MethodArgumentNotValidException ex) {
-        LOG.error(ex.getMessage());
+    public ResponseEntity<Map<String, String>> handleValidationExceptions(MethodArgumentNotValidException e) {
+        LOG.error(e.getMessage());
         Map<String, String> errors = new HashMap<>();
-        ex.getBindingResult().getAllErrors().forEach((error) -> {
+        e.getBindingResult().getAllErrors().forEach((error) -> {
             String fieldName = ((FieldError) error).getField();
             String errorMessage = error.getDefaultMessage();
             errors.put(fieldName, errorMessage);
@@ -29,12 +29,21 @@ public class ExceptionInfoHandler {
     }
 
     @ExceptionHandler(Exception.class)
-    public ResponseEntity<Map<String, String>> handleExceptions(Exception ex) {
-        LOG.error(ex.getMessage());
+    public ResponseEntity<Map<String, String>> handleExceptions(Exception e) {
+        LOG.error(e.getMessage());
         Map<String, String> error = new HashMap<>();
-        String errorName = ex.getClass().getName();
-        String errorMessage = ex.getMessage();
-        error.put(errorName, errorMessage);
+        Throwable rootEx = getRootCause(e);
+        error.put(rootEx.getClass().getName(), rootEx.getMessage());
         return new ResponseEntity<>(error, HttpStatus.BAD_REQUEST);
+    }
+
+    private Throwable getRootCause(Throwable t) {
+        Throwable result = t;
+        Throwable cause;
+
+        while (null != (cause = result.getCause()) && (result != cause)) {
+            result = cause;
+        }
+        return result;
     }
 }

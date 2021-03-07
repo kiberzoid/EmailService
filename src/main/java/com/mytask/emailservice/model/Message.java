@@ -2,38 +2,76 @@ package com.mytask.emailservice.model;
 
 import com.mytask.emailservice.util.First;
 import com.mytask.emailservice.util.Second;
+import org.springframework.util.StringUtils;
+import org.springframework.web.multipart.MultipartFile;
 
 import javax.validation.GroupSequence;
+import javax.validation.constraints.Email;
 import javax.validation.constraints.NotBlank;
-import javax.validation.constraints.Pattern;
+import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
+import java.util.List;
 import java.util.Objects;
+import java.util.stream.Collectors;
 
 @GroupSequence({Message.class, First.class, Second.class})
 public class Message {
 
-    @NotBlank(groups = First.class, message = "must not be null or empty")
-    @Pattern(regexp = "^email$", groups = Second.class, message = "must be equals to email")
-    private String type;
+    @NotBlank(groups = First.class, message="{any.not_blank}")
+    @Email(groups = Second.class, message="{any.email}")
+    private String from;
 
-    @NotBlank(groups = First.class, message = "must not be null or empty")
-    @Size(min = 1, max = 300, groups = Second.class, message = "length must be in [1,300]")
+    @NotNull(groups = First.class, message="{any.not_null}")
+    @Size(min = 1, max = 3, groups = Second.class, message="{destination.size}")
+    private List<@NotBlank(message="{any.not_blank}") @Email(message="{any.email}") String> destination;
+
+    @NotBlank(groups = First.class, message="{any.not_blank}")
+    @Size(min = 1, max = 30, groups = Second.class, message="{subject.size}")
+    private String subject;
+
+    @NotBlank(groups = First.class, message="{any.not_blank}")
+    @Size(min = 1, max = 300, groups = Second.class, message="{text.size}")
     private String text;
+
+    private List<MultipartFile> attachment;
 
     public Message() {
     }
 
-    public Message(String type, String text) {
-        this.type = type;
+    public Message(String from, List<String> destination, String subject, String text) {
+        this.from = from;
+        this.destination = destination;
+        this.subject = subject;
         this.text = text;
     }
 
-    public String getType() {
-        return type;
+    public Message(String from, List<String> destination, String subject, String text, List<MultipartFile> attachment) {
+        this(from, destination, subject, text);
+        this.attachment = attachment;
     }
 
-    public void setType(String type) {
-        this.type = type;
+    public String getFrom() {
+        return from;
+    }
+
+    public void setFrom(String from) {
+        this.from = from;
+    }
+
+    public List<String> getDestination() {
+        return destination;
+    }
+
+    public void setDestination(List<String> destination) {
+        this.destination = destination;
+    }
+
+    public String getSubject() {
+        return subject;
+    }
+
+    public void setSubject(String subject) {
+        this.subject = subject;
     }
 
     public String getText() {
@@ -44,25 +82,53 @@ public class Message {
         this.text = text;
     }
 
+    public List<MultipartFile> getAttachment() {
+        return attachment;
+    }
+
+    public void setAttachment(List<MultipartFile> attachment) {
+        this.attachment = attachment;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
         if (!(o instanceof Message)) return false;
         Message message = (Message) o;
-        return Objects.equals(getType(), message.getType()) &&
-                Objects.equals(getText(), message.getText());
+        return getFrom().equals(message.getFrom()) &&
+                getDestination().equals(message.getDestination()) &&
+                getSubject().equals(message.getSubject()) &&
+                getText().equals(message.getText()) &&
+                Objects.equals(getAttachment(), message.getAttachment());
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(getType(), getText());
+        return Objects.hash(getFrom(), getDestination(), getSubject(), getText(), getAttachment());
     }
 
     @Override
     public String toString() {
-        return "Message{" +
-                "type='" + type + '\'' +
-                ", text='" + text + '\'' +
-                '}';
+        if (attachment != null && !attachment.isEmpty()) {
+            List<String> listNames = attachment.stream()
+                    .map(MultipartFile::getOriginalFilename)
+                    .collect(Collectors.toList());
+            String names = StringUtils.collectionToDelimitedString(listNames, ",", "[", "]");
+            return "Message{" +
+                    "from=" + from +
+                    ", destination=" + destination +
+                    ", subject=" + subject +
+                    ", text=" + text +
+                    ", attachment=" + names +
+                    "}";
+
+        } else {
+            return "Message{" +
+                    "from=" + from +
+                    ", destination=" + destination +
+                    ", subject=" + subject +
+                    ", text=" + text +
+                    "}";
+        }
     }
 }

@@ -1,21 +1,25 @@
 package com.mytask.emailservice;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.mytask.emailservice.model.Message;
+import com.mytask.emailservice.web.EmailController;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
+import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.web.servlet.MockMvc;
 
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import java.nio.charset.StandardCharsets;
+
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @SpringBootTest
 @AutoConfigureMockMvc
 class EmailServiceApplicationTests {
+    private static final String URL = EmailController.URL + "/message";
 
     @Autowired
     private MockMvc mockMvc;
@@ -28,19 +32,45 @@ class EmailServiceApplicationTests {
     }
 
     @Test
-    public void sendMessage() throws Exception {
-        this.mockMvc.perform(post("/api/email/message")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(mapper.writeValueAsString(new Message("email", "test"))))
+    public void sendMessageWithoutAttachment() throws Exception {
+        MockMultipartFile mockFile = new MockMultipartFile("msg", "msg.json",
+                MediaType.APPLICATION_JSON_VALUE, mapper.writeValueAsString(TestData.MSG).getBytes(StandardCharsets.UTF_8));
+        mockMvc.perform(multipart(URL)
+                .file(mockFile))
                 .andDo(print())
                 .andExpect(status().isNoContent());
     }
 
     @Test
-    public void sendMessageWithBadField() throws Exception {
-        this.mockMvc.perform(post("/api/email/message")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(mapper.writeValueAsString(new Message(null, "test"))))
+    public void sendMessageWithAttachment() throws Exception {
+        MockMultipartFile mockFileAttachment = new MockMultipartFile("attachment", "manual.txt",
+                MediaType.TEXT_PLAIN_VALUE, "text inside manual".getBytes(StandardCharsets.UTF_8));
+        MockMultipartFile mockFile = new MockMultipartFile("msg", "msg.json",
+                MediaType.APPLICATION_JSON_VALUE, mapper.writeValueAsString(TestData.MSG).getBytes(StandardCharsets.UTF_8));
+        mockMvc.perform(multipart(URL)
+                .file(mockFileAttachment)
+                .file(mockFile))
+                .andDo(print())
+                .andExpect(status().isNoContent());
+    }
+
+    @Test
+    public void sendMessageWithoutMsg() throws Exception {
+        MockMultipartFile mockFileAttachment = new MockMultipartFile("attachment", "manual.txt",
+                MediaType.TEXT_PLAIN_VALUE, "text inside manual".getBytes(StandardCharsets.UTF_8));
+        mockMvc.perform(multipart(URL)
+                .file(mockFileAttachment))
+                .andDo(print())
+                .andExpect(status().isBadRequest());
+    }
+
+
+    @Test
+    public void sendBadMessageWithoutAttachment() throws Exception {
+        MockMultipartFile mockFile = new MockMultipartFile("msg", "msg.json",
+                MediaType.APPLICATION_JSON_VALUE, mapper.writeValueAsString(TestData.BAD_MSG).getBytes(StandardCharsets.UTF_8));
+        mockMvc.perform(multipart(URL)
+                .file(mockFile))
                 .andDo(print())
                 .andExpect(status().isBadRequest());
     }

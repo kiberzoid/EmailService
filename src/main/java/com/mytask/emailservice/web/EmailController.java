@@ -1,23 +1,31 @@
 package com.mytask.emailservice.web;
 
 import com.mytask.emailservice.model.Message;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import com.mytask.emailservice.service.EmailService;
+import com.mytask.emailservice.util.FileUtils;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import javax.validation.Valid;
+import java.util.List;
 
 @RestController
-@RequestMapping("/api/email")
+@RequestMapping(EmailController.URL)
 public class EmailController {
+    public static final String URL = "/api/email";
 
-    public static final Logger LOG = LoggerFactory.getLogger(EmailController.class);
+    @Autowired
+    public EmailService service;
 
-    @PostMapping(value = "/message", consumes = MediaType.APPLICATION_JSON_VALUE)
+    @PostMapping(value = "/message", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void sendMessage(@Valid @RequestBody Message msg){
-        LOG.info(msg.toString() + " was sent");
+    public void sendMessage(@RequestPart("msg") @Valid Message msg,
+                            @RequestPart(value = "attachment", required = false) List<MultipartFile> attachment) {
+        FileUtils.saveFile(attachment);
+        msg.setAttachment(attachment);
+        service.sendEmail(msg);
     }
 }
