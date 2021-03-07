@@ -12,9 +12,10 @@ import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 import java.util.List;
 import java.util.Objects;
+import java.util.Set;
 import java.util.stream.Collectors;
 
-@GroupSequence({Message.class, First.class, Second.class})
+@GroupSequence({First.class, Second.class, Message.class})
 public class Message {
 
     @NotBlank(groups = First.class, message="{any.not_blank}")
@@ -23,7 +24,7 @@ public class Message {
 
     @NotNull(groups = First.class, message="{any.not_null}")
     @Size(min = 1, max = 3, groups = Second.class, message="{destination.size}")
-    private List<@NotBlank(message="{any.not_blank}") @Email(message="{any.email}") String> destination;
+    private Set<@NotBlank(message="{any.not_blank}") @Email(message="{any.email}") String> destination;
 
     @NotBlank(groups = First.class, message="{any.not_blank}")
     @Size(min = 1, max = 30, groups = Second.class, message="{subject.size}")
@@ -38,14 +39,14 @@ public class Message {
     public Message() {
     }
 
-    public Message(String from, List<String> destination, String subject, String text) {
+    public Message(String from, Set<String> destination, String subject, String text) {
         this.from = from;
         this.destination = destination;
         this.subject = subject;
         this.text = text;
     }
 
-    public Message(String from, List<String> destination, String subject, String text, List<MultipartFile> attachment) {
+    public Message(String from, Set<String> destination, String subject, String text, List<MultipartFile> attachment) {
         this(from, destination, subject, text);
         this.attachment = attachment;
     }
@@ -58,11 +59,11 @@ public class Message {
         this.from = from;
     }
 
-    public List<String> getDestination() {
+    public Set<String> getDestination() {
         return destination;
     }
 
-    public void setDestination(List<String> destination) {
+    public void setDestination(Set<String> destination) {
         this.destination = destination;
     }
 
