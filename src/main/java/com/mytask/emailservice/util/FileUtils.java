@@ -26,7 +26,7 @@ public class FileUtils {
         if (attachment != null) {
             for (MultipartFile file : attachment) {
                 if (file.isEmpty()) {
-                    throw new IllegalArgumentException("File " + file.getOriginalFilename() + "is empty.Attachment can not contains empty file ");
+                    throw new IllegalArgumentException("File " + file.getOriginalFilename() + " is empty.Attachment can not contains empty file.");
                 }
                 if (!file.isEmpty()) {
                     FileUtils.multipartToFile(file, file.getOriginalFilename());

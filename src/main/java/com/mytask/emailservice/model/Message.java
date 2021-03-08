@@ -118,18 +118,18 @@ public class Message {
             return "Message{" +
                     "from=" + from +
                     ", destination=" + destination +
-                    ", subject=" + subject +
-                    ", text=" + text +
-                    ", attachment=" + names +
+                    ", subject='" + subject +
+                    "', text='" + text +
+                    "', attachment=" + names +
                     "}";
 
         } else {
             return "Message{" +
                     "from=" + from +
                     ", destination=" + destination +
-                    ", subject=" + subject +
-                    ", text=" + text +
-                    "}";
+                    ", subject='" + subject +
+                    "', text='" + text +
+                    "'}";
         }
     }
 }
